@@ -35,8 +35,13 @@ The Semantic Knowledge Graph Intelligence System models financial transaction ec
               (Customer) -------[:MEMBER_OF]-------> (RiskCluster)
 ```
 
+## Comparative Analysis: Row-by-Row ML vs SKGIS Graph Intelligence
+
+![Traditional Row-by-Row ML vs SKGIS Graph Intelligence](row-by-row-vs-graph.png)
+
 ## Explanation of Detection Mechanics
 
 Traditional row-based machine learning scores each `Transaction` independently. However, organized fraud syndicates operate by sharing single mobile devices or bank accounts across multiple synthetic or stolen customer identities. 
 
 By projecting an undirected bipartite graph of `Customer - USED_DEVICE - Device` and `Customer - OWNS_ACCOUNT - BankAccount`, GDS Louvain community detection partitions entities into densely connected resource clusters. The rule engine then evaluates cluster characteristics (e.g. `>3` distinct customers on one device) and materializes an explicit `RiskCluster` node attached via `MEMBER_OF` edges.
+
