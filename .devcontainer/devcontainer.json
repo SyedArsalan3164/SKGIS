@@ -1,0 +1,23 @@
+{
+  "name": "SKGIS - Risk & Compliance Explorer",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "skgis-app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "neo4j.cypher",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "forwardPorts": [8080, 7474, 7687],
+  "portsAttributes": {
+    "8080": {
+      "label": "SKGIS Web Explorer",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "postCreateCommand": "mvn clean package -DskipTests"
+}

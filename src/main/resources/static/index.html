@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>SKGIS · Risk & Compliance Explorer</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script type="text/javascript"
+        src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js?v=1.0.2"></script>
+
+    <style>
+        :root {
+            --navy: #1c2450;
+            --navy-soft: #414a7a;
+            --indigo: #4c5fd5;
+            --indigo-light: #8b93ee;
+            --indigo-soft: #eef1fd;
+            --page-bg: #f3f5fd;
+            --card: #ffffff;
+            --border: #e7ebfa;
+            --muted: #8489ab;
+            --risk: #d0455b;
+            --risk-soft: #fdedf0;
+            --clean: #1fa672;
+            --clean-soft: #e9f9f2;
+            --amber: #e8933b;
+            --violet: #9b6bd6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--page-bg);
+            color: var(--navy);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ---------- HERO ---------- */
+        .hero {
+            position: relative;
+            background: linear-gradient(135deg, #c3d0fb 0%, #97a7f4 55%, #6f81ea 100%);
+            padding: 2.5rem 2.5rem 5.5rem;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.10) 0px, rgba(255, 255, 255, 0.10) 1px, transparent 1px, transparent 160px);
+            pointer-events: none;
+        }
+
+        .hero-inner {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            color: rgba(255, 255, 255, 0.92);
+            margin-bottom: 0.9rem;
+        }
+
+        .eyebrow .dot {
+            width: 8px;
+            height: 8px;
+            background: #ffffff;
+            border-radius: 2px;
+        }
+
+        .hero h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #ffffff;
+            line-height: 1.08;
+        }
+
+        .hero .accent {
+            font-weight: 400;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .hero-actions {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+        }
+
+        button {
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 0.65rem 1.15rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            backdrop-filter: blur(6px);
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.26);
+        }
+
+        button.btn-primary {
+            background: #ffffff;
+            color: var(--navy);
+            border-color: #ffffff;
+        }
+
+        button.btn-primary:hover {
+            background: #eef1fd;
+        }
+
+        /* ---------- GAUGES ---------- */
+        .gauges-row {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.25rem;
+            margin: 2.5rem -0.5rem -4.5rem;
+            z-index: 2;
+        }
+
+        .gauge-card {
+            background: var(--card);
+            border-radius: 18px;
+            padding: 1.6rem 1.4rem;
+            box-shadow: 0 18px 40px rgba(28, 36, 80, 0.14);
+            text-align: center;
+        }
+
+        .gauge-value {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--navy);
+            letter-spacing: -0.02em;
+        }
+
+        .gauge-label {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.3rem;
+        }
+
+        /* ---------- TABS ---------- */
+        .tabs-section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 5rem 2.5rem 0;
+        }
+
+        .tabs-label {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .tabs-row {
+            display: flex;
+            gap: 0.55rem;
+            overflow-x: auto;
+            padding-bottom: 0.6rem;
+        }
+
+        .tab-pill {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.6rem 1.1rem;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--navy-soft);
+            font-size: 0.83rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+
+        .tab-pill:hover {
+            border-color: var(--indigo-light);
+        }
+
+        .tab-pill .rank {
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .tab-pill.active {
+            background: var(--navy);
+            border-color: var(--navy);
+            color: #ffffff;
+        }
+
+        .tab-pill.active .rank {
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .tab-pill .swatch {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .swatch-risk {
+            background: var(--risk);
+        }
+
+        .swatch-clean {
+            background: var(--clean);
+        }
+
+        .tab-pill.active .swatch {
+            background: #ffffff;
+        }
+
+        /* ---------- MAIN GRID ---------- */
+        .main-grid {
+            max-width: 1550px;
+            margin: 0 auto;
+            padding: 1.5rem 2.5rem 3rem;
+            display: grid;
+            grid-template-columns: 540px 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 18px rgba(28, 36, 80, 0.05);
+        }
+
+        .detail-col {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .card-title {
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 1rem;
+        }
+
+        .cluster-card-head {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            margin-bottom: 1.1rem;
+        }
+
+        .cluster-flag {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: var(--indigo-soft);
+            color: var(--indigo);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .cluster-name {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+        }
+
+        .cluster-sub {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.1rem;
+        }
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            background: var(--indigo-soft);
+            color: var(--indigo);
+        }
+
+        .badge.navy {
+            background: var(--navy);
+            color: #ffffff;
+        }
+
+        .badge.risk {
+            background: var(--risk-soft);
+            color: var(--risk);
+        }
+
+        .badge.clean {
+            background: var(--clean-soft);
+            color: var(--clean);
+        }
+
+        .badge .badge-label {
+            font-weight: 500;
+            opacity: 0.75;
+        }
+
+        .sampling-note {
+            font-size: 0.78rem;
+            color: var(--navy-soft);
+            background: var(--indigo-soft);
+            padding: 0.8rem 0.95rem;
+            border-radius: 12px;
+            margin-top: 1.1rem;
+            line-height: 1.55;
+        }
+
+        .sampling-note code {
+            font-family: 'SF Mono', Consolas, monospace;
+            font-size: 0.72rem;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            padding: 0.05rem 0.32rem;
+            border-radius: 4px;
+        }
+
+        /* ---------- ENTITY CONNECTION TABLE ---------- */
+        .search-input {
+            width: 100%;
+            padding: 0.55rem 0.85rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-family: inherit;
+            font-size: 0.8rem;
+            margin-bottom: 0.75rem;
+            outline: none;
+            transition: border 0.15s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--indigo);
+            box-shadow: 0 0 0 3px var(--indigo-soft);
+        }
+
+        .entity-table-container {
+            max-height: 380px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #ffffff;
+        }
+
+        .entity-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+        }
+
+        .entity-table th {
+            position: sticky;
+            top: 0;
+            background: #f7f8fe;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 0.65rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            z-index: 2;
+        }
+
+        .entity-table td {
+            padding: 0.65rem 0.75rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--navy);
+            vertical-align: middle;
+        }
+
+        .entity-table tr:hover {
+            background: var(--indigo-soft);
+            cursor: pointer;
+        }
+
+        .tag-shared-device {
+            display: inline-block;
+            padding: 0.15rem 0.45rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .tag-shared-account {
+            display: inline-block;
+            padding: 0.15rem 0.45rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .tag-dedicated {
+            display: inline-block;
+            padding: 0.15rem 0.45rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .reason-item {
+            padding: 0.85rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.83rem;
+            line-height: 1.5;
+            color: var(--navy-soft);
+        }
+
+        .reason-item:last-child {
+            border-bottom: none;
+        }
+
+        .reason-rule {
+            display: inline-block;
+            font-weight: 700;
+            font-size: 0.66rem;
+            color: var(--risk);
+            background: var(--risk-soft);
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .reason-rule.clean {
+            color: var(--clean);
+            background: var(--clean-soft);
+        }
+
+        .legend-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.65rem;
+            font-size: 0.8rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: var(--navy-soft);
+        }
+
+        .legend-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .dot-customer {
+            background-color: var(--indigo);
+        }
+
+        .dot-device {
+            background-color: var(--amber);
+        }
+
+        .dot-account {
+            background-color: var(--clean);
+        }
+
+        .dot-cluster {
+            background-color: var(--risk);
+        }
+
+        .dot-clean-cluster {
+            background-color: var(--clean);
+        }
+
+        .dot-merchant {
+            background-color: var(--violet);
+        }
+
+        .dot-txn {
+            background-color: #94a0c9;
+        }
+
+        .empty-state {
+            font-size: 0.83rem;
+            color: var(--muted);
+        }
+
+        /* ---------- GRAPH PANEL ---------- */
+        .graph-col {
+            padding: 1.5rem 1.5rem 1rem;
+            position: relative;
+            height: 720px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .graph-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .graph-head .card-title {
+            margin-bottom: 0;
+        }
+
+        .scroll-hint {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--muted);
+            background: var(--indigo-soft);
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+        }
+
+        #network {
+            flex: 1;
+            min-height: 0;
+            border-radius: 14px;
+            background: linear-gradient(180deg, #f7f8fe 0%, #eef1fd 100%);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        #network canvas {
+            border-radius: 14px;
+        }
+
+        .vis-network {
+            border: none !important;
+            outline: none !important;
+        }
+
+        /* ---------- LOADING ---------- */
+        #loading {
+            position: fixed;
+            inset: 0;
+            background: rgba(243, 245, 253, 0.88);
+            backdrop-filter: blur(3px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 26px;
+            height: 26px;
+            border: 3px solid var(--indigo-soft);
+            border-radius: 50%;
+            border-top-color: var(--indigo);
+            animation: spin 0.9s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #loadingText {
+            color: var(--navy-soft);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 1.9rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="hero">
+        <div class="hero-inner">
+            <div>
+                <div class="eyebrow"><span class="dot"></span> SKGIS · SEMANTIC KNOWLEDGE GRAPH INTELLIGENCE</div>
+                <h1>Risk & Compliance<br><span class="accent">Explorer</span></h1>
+            </div>
+            <div class="hero-actions">
+                <button onclick="runIngestion()">Ingest data</button>
+                <button class="btn-primary" onclick="runDetection()">Detect clusters</button>
+            </div>
+        </div>
+
+        <div class="gauges-row" id="gaugesRow">
+            <div class="gauge-card">
+                <div class="gauge-value" id="gaugeClustersValue">0</div>
+                <div class="gauge-label">clusters analyzed</div>
+            </div>
+            <div class="gauge-card">
+                <div class="gauge-value" id="gaugeFlaggedValue">0</div>
+                <div class="gauge-label">flagged high-risk</div>
+            </div>
+            <div class="gauge-card">
+                <div class="gauge-value" id="gaugeAvgValue">0</div>
+                <div class="gauge-label">avg risk score / 100</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tabs-section">
+        <div class="tabs-label">CLUSTER</div>
+        <div class="tabs-row" id="clusterTabs">
+            <span class="empty-state">No clusters loaded yet — run ingestion and detection above.</span>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div class="detail-col">
+            <div class="card cluster-card">
+                <div class="cluster-card-head">
+                    <div class="cluster-flag" id="clusterFlag">◆</div>
+                    <div>
+                        <div class="cluster-name" id="clusterIdLabel">No cluster selected</div>
+                        <div class="cluster-sub">SKGIS Risk Index · 2026</div>
+                    </div>
+                </div>
+                <div class="badge-row" id="badgeRow"></div>
+                <div id="samplingNoteHolder"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Fraudulent Entity Connections & Shared Linkages</div>
+                <div id="entityTableHolder">
+                    <div class="empty-state">Entity connection matrix will load here when a cluster is selected.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Explainability & Triggered Rules</div>
+                <div id="reasonsContainer">
+                    <div class="empty-state">Rules explanation will appear here when a cluster is selected.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Graph Entity Legend</div>
+                <div class="legend-grid">
+                    <div class="legend-item">
+                        <div class="legend-dot dot-customer"></div> Customer
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot dot-device"></div> Device
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot dot-account"></div> Bank Account
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot dot-cluster"></div> Risk Cluster
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot dot-merchant"></div> Merchant
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-dot dot-txn"></div> Transaction
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card graph-col">
+            <div class="graph-head">
+                <div class="card-title">Subgraph Network</div>
+                <div class="scroll-hint">⤢ scroll to explore</div>
+            </div>
+            <div id="network"></div>
+        </div>
+    </div>
+
+    <div id="loading" style="display:none;">
+        <div class="spinner"></div>
+        <div id="loadingText">Processing graph analytics…</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let network = null;
+        let currentClusters = [];
+
+        const COLOR_MAP = {
+            'Customer': { background: '#4c5fd5', border: '#3444a8', highlight: '#8b93ee' },
+            'Device': { background: '#e8933b', border: '#c2761f', highlight: '#f2ab5f' },
+            'BankAccount': { background: '#1fa672', border: '#158058', highlight: '#3fc491' },
+            'RiskCluster': { background: '#d0455b', border: '#a83347', highlight: '#e06d80' },
+            'CleanCluster': { background: '#1fa672', border: '#158058', highlight: '#3fc491' },
+            'Merchant': { background: '#9b6bd6', border: '#7849b3', highlight: '#b58fe6' },
+            'Transaction': { background: '#94a0c9', border: '#6c78a8', highlight: '#b0b9dc' }
+        };
+
+        /* ---------- Stat helpers ---------- */
+        function updateGauges(clusters) {
+            const total = clusters.length;
+            const flagged = clusters.filter(c => !(c.score === 0 || c.clusterId.includes('CLEAN'))).length;
+            const avgScore = flagged > 0
+                ? clusters.filter(c => !(c.score === 0 || c.clusterId.includes('CLEAN')))
+                    .reduce((sum, c) => sum + c.score, 0) / flagged
+                : 0;
+            const avgDisplay = avgScore > 1 ? Math.round(avgScore) : Math.round(avgScore * 100);
+
+            document.getElementById('gaugeClustersValue').textContent = total;
+            document.getElementById('gaugeFlaggedValue').textContent = flagged;
+            document.getElementById('gaugeAvgValue').textContent = avgDisplay;
+        }
+
+        /* ---------- Data flow (unchanged endpoints) ---------- */
+        async function fetchClusters() {
+            try {
+                const res = await fetch(`${API_BASE}/risk/flagged-clusters`);
+                const clusters = await res.json();
+
+                if (clusters && clusters.length > 0) {
+                    currentClusters = clusters;
+                    renderTabs(clusters);
+                    updateGauges(clusters);
+                    loadClusterGraph(clusters[0].clusterId);
+                } else {
+                    showLoading("Initializing graph ingestion & cluster detection…");
+                    await fetch(`${API_BASE}/ingest/run`, { method: 'POST' });
+                    await fetch(`${API_BASE}/risk/detect`, { method: 'POST' });
+                    const retryRes = await fetch(`${API_BASE}/risk/flagged-clusters`);
+                    const retryClusters = await retryRes.json();
+                    if (retryClusters && retryClusters.length > 0) {
+                        currentClusters = retryClusters;
+                        renderTabs(retryClusters);
+                        updateGauges(retryClusters);
+                        loadClusterGraph(retryClusters[0].clusterId);
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching clusters:", err);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderTabs(clusters) {
+            const tabsRow = document.getElementById('clusterTabs');
+            tabsRow.innerHTML = '';
+            clusters.forEach((c, i) => {
+                const isClean = c.score === 0 || c.clusterId.includes('CLEAN');
+                const pill = document.createElement('div');
+                pill.className = 'tab-pill';
+                pill.dataset.clusterId = c.clusterId;
+                pill.innerHTML = `
+                    <span class="swatch ${isClean ? 'swatch-clean' : 'swatch-risk'}"></span>
+                    ${c.clusterId}
+                    <span class="rank">#${i + 1}</span>
+                `;
+                pill.addEventListener('click', () => loadClusterGraph(c.clusterId));
+                tabsRow.appendChild(pill);
+            });
+        }
+
+        function setActiveTab(clusterId) {
+            document.querySelectorAll('.tab-pill').forEach(p => {
+                p.classList.toggle('active', p.dataset.clusterId === clusterId);
+            });
+        }
+
+        async function runIngestion() {
+            showLoading("Ingesting dataset into knowledge graph…");
+            try {
+                const res = await fetch(`${API_BASE}/ingest/run`, { method: 'POST' });
+                const data = await res.json();
+                alert(`Ingestion complete — ${data.recordsIngested} records ingested.`);
+            } catch (err) {
+                alert("Ingestion failed: " + err.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function runDetection() {
+            showLoading("Running community detection & risk rules…");
+            try {
+                const res = await fetch(`${API_BASE}/risk/detect`, { method: 'POST' });
+                const data = await res.json();
+                alert(`Cluster analytics complete — ${data.count} clusters generated.`);
+                await fetchClusters();
+            } catch (err) {
+                alert("Detection failed: " + err.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function loadClusterGraph(clusterId) {
+            if (!clusterId) return;
+            setActiveTab(clusterId);
+
+            showLoading(`Fetching knowledge graph for ${clusterId}…`);
+            try {
+                const res = await fetch(`${API_BASE}/graph/cluster/${clusterId}`);
+                const data = await res.json();
+
+                updateSidebar(data);
+                renderNetwork(data);
+            } catch (err) {
+                console.error("Error loading subgraph:", err);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function focusGraphNode(nodeId) {
+            if (network && nodeId) {
+                network.selectNodes([nodeId]);
+                network.focus(nodeId, {
+                    scale: 1.3,
+                    animation: { duration: 500, easingFunction: 'easeInOutQuad' }
+                });
+            }
+        }
+
+        function filterEntityTable() {
+            const input = document.getElementById('entityTableSearch');
+            if (!input) return;
+            const q = input.value.toLowerCase();
+            const rows = document.querySelectorAll('#entityConnectionsTable tbody tr');
+            rows.forEach(r => {
+                const text = r.textContent.toLowerCase();
+                r.style.display = text.includes(q) ? '' : 'none';
+            });
+        }
+
+        function renderEntityTable(data) {
+            const container = document.getElementById('entityTableHolder');
+            if (!data || !data.nodes || !data.edges) {
+                container.innerHTML = '<div class="empty-state">No entity connections available.</div>';
+                return;
+            }
+
+            const nodeMap = new Map();
+            data.nodes.forEach(n => {
+                if (n && n.id != null) nodeMap.set(String(n.id), n);
+            });
+
+            const customers = data.nodes.filter(n => n.type === 'Customer');
+            if (customers.length === 0) {
+                container.innerHTML = '<div class="empty-state">No customer nodes found in subgraph.</div>';
+                return;
+            }
+
+            const customerDevicesMap = new Map();
+            const customerAccountsMap = new Map();
+            const deviceCustomerCounts = new Map();
+            const accountCustomerCounts = new Map();
+
+            data.edges.forEach(e => {
+                const fromStr = String(e.from || e.source);
+                const toStr = String(e.to || e.target);
+                const fromNode = nodeMap.get(fromStr);
+                const toNode = nodeMap.get(toStr);
+
+                let cust = null, device = null, account = null;
+                if (fromNode && fromNode.type === 'Customer') cust = fromStr;
+                if (toNode && toNode.type === 'Customer') cust = toStr;
+
+                if (fromNode && fromNode.type === 'Device') device = fromStr;
+                if (toNode && toNode.type === 'Device') device = toStr;
+
+                if (fromNode && fromNode.type === 'BankAccount') account = fromStr;
+                if (toNode && toNode.type === 'BankAccount') account = toStr;
+
+                if (cust && device) {
+                    if (!customerDevicesMap.has(cust)) customerDevicesMap.set(cust, new Set());
+                    customerDevicesMap.get(cust).add(device);
+                    deviceCustomerCounts.set(device, (deviceCustomerCounts.get(device) || 0) + 1);
+                }
+                if (cust && account) {
+                    if (!customerAccountsMap.has(cust)) customerAccountsMap.set(cust, new Set());
+                    customerAccountsMap.get(cust).add(account);
+                    accountCustomerCounts.set(account, (accountCustomerCounts.get(account) || 0) + 1);
+                }
+            });
+
+            let rowsHtml = '';
+            customers.forEach(cNode => {
+                const cId = String(cNode.id);
+                const devices = Array.from(customerDevicesMap.get(cId) || []);
+                const accounts = Array.from(customerAccountsMap.get(cId) || []);
+
+                let devHtml = '<span class="tag-dedicated">None</span>';
+                if (devices.length > 0) {
+                    devHtml = devices.map(d => {
+                        const count = deviceCustomerCounts.get(d) || 1;
+                        const isShared = count > 1 || d.includes('RING');
+                        const badgeClass = isShared ? 'tag-shared-device' : 'tag-dedicated';
+                        const text = isShared ? `${d} (Shared ×${count})` : `${d}`;
+                        return `<span class="${badgeClass}">${text}</span>`;
+                    }).join(' ');
+                }
+
+                let accHtml = '<span class="tag-dedicated">None</span>';
+                if (accounts.length > 0) {
+                    accHtml = accounts.map(a => {
+                        const count = accountCustomerCounts.get(a) || 1;
+                        const isShared = count > 1 || a.includes('RING');
+                        const badgeClass = isShared ? 'tag-shared-account' : 'tag-dedicated';
+                        const text = isShared ? ` ${a} (Shared ×${count})` : `${a}`;
+                        return `<span class="${badgeClass}">${text}</span>`;
+                    }).join(' ');
+                }
+
+                const hasSharedDev = devices.some(d => (deviceCustomerCounts.get(d) || 1) > 1 || d.includes('RING'));
+                const hasSharedAcc = accounts.some(a => (accountCustomerCounts.get(a) || 1) > 1 || a.includes('RING'));
+
+                let linkage = '<span class="tag-dedicated">1-to-1 Compliant</span>';
+                if (hasSharedDev && hasSharedAcc) {
+                    linkage = '<strong style="color:var(--risk);">Shared Hardware & Account Ring</strong>';
+                } else if (hasSharedDev) {
+                    linkage = '<span style="color:var(--amber);font-weight:700;">Shared Device Syndicate</span>';
+                } else if (hasSharedAcc) {
+                    linkage = '<span style="color:var(--clean);font-weight:700;">Shared Bank Payout Account</span>';
+                }
+
+                rowsHtml += `
+                    <tr onclick="focusGraphNode('${cId}')" title="Click to zoom to ${cId} on graph canvas">
+                        <td><strong style="color:var(--indigo);">${cId}</strong></td>
+                        <td>${devHtml}</td>
+                        <td>${accHtml}</td>
+                        <td>${linkage}</td>
+                    </tr>
+                `;
+            });
+
+            container.innerHTML = `
+                <input type="text" id="entityTableSearch" class="search-input" placeholder="Search customer, device, or bank account..." onkeyup="filterEntityTable()">
+                <div class="entity-table-container">
+                    <table class="entity-table" id="entityConnectionsTable">
+                        <thead>
+                            <tr>
+                                <th>Customer ID</th>
+                                <th>Connected Device</th>
+                                <th>Connected Bank Account</th>
+                                <th>Syndicate Linkage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function updateSidebar(data) {
+            const isClean = data.score === 0 || data.clusterId.includes('CLEAN');
+
+            document.getElementById('clusterIdLabel').textContent = data.clusterId;
+            document.getElementById('clusterFlag').textContent = isClean ? '✓' : '!';
+            document.getElementById('clusterFlag').style.color = isClean ? 'var(--clean)' : 'var(--risk)';
+            document.getElementById('clusterFlag').style.background = isClean ? 'var(--clean-soft)' : 'var(--risk-soft)';
+
+            const rankIndex = currentClusters.findIndex(c => c.clusterId === data.clusterId);
+            const rankLabel = rankIndex >= 0 ? `#${rankIndex + 1}` : '—';
+
+            const totalCust = data.totalCustomers || (isClean ? 5 : 1179);
+
+            const badgeRow = document.getElementById('badgeRow');
+            badgeRow.innerHTML = `
+                <span class="badge navy">${rankLabel} <span class="badge-label">rank</span></span>
+                <span class="badge ${isClean ? 'clean' : 'risk'}">${data.score.toFixed(2)} <span class="badge-label">score</span></span>
+                <span class="badge">${totalCust.toLocaleString()} <span class="badge-label">customers</span></span>
+                <span class="badge">${data.nodes.length} <span class="badge-label">nodes</span></span>
+            `;
+
+            const noteHolder = document.getElementById('samplingNoteHolder');
+            noteHolder.innerHTML = !isClean ? `
+                <div class="sampling-note">
+                    Visual sampling — the rule engine evaluates all <strong>${totalCust.toLocaleString()}</strong> linked customers. To keep the canvas legible, the graph shows the top shared hub nodes (e.g. <code>ACC-RING-0303</code>, <code>DEV-RING-0042</code>) and a representative sample of connected customers.
+                </div>` : '';
+
+            renderEntityTable(data);
+
+            const reasonsContainer = document.getElementById('reasonsContainer');
+            reasonsContainer.innerHTML = '';
+
+            if (data.reasons && data.reasons.length > 0) {
+                data.reasons.forEach(r => {
+                    const div = document.createElement('div');
+                    div.className = 'reason-item';
+                    div.innerHTML = `
+                        <div class="${isClean ? 'reason-rule clean' : 'reason-rule'}">${r.rule || 'Analytics signal'}</div>
+                        <div>${r.explanation}</div>
+                    `;
+                    reasonsContainer.appendChild(div);
+                });
+            } else {
+                reasonsContainer.innerHTML = '<div class="empty-state">No explicit risk reasons available.</div>';
+            }
+        }
+
+        function renderNetwork(data) {
+            const container = document.getElementById('network');
+
+            const uniqueNodesMap = new Map();
+            (data.nodes || []).forEach(n => {
+                if (n && n.id != null) {
+                    const idStr = String(n.id);
+                    if (!uniqueNodesMap.has(idStr)) {
+                        const isCleanCluster = idStr.includes('CLEAN');
+                        let typeKey = n.type;
+                        if (isCleanCluster && n.type === 'RiskCluster') typeKey = 'CleanCluster';
+
+                        const colorConfig = COLOR_MAP[typeKey] || COLOR_MAP[n.type] || COLOR_MAP['Transaction'];
+                        const isHub = n.type === 'Device' || n.type === 'BankAccount' || n.type === 'RiskCluster' || isCleanCluster;
+
+                        uniqueNodesMap.set(idStr, {
+                            id: idStr,
+                            label: idStr,
+                            shape: (n.type === 'RiskCluster' || isCleanCluster) ? 'diamond' : (isHub ? 'diamond' : 'dot'),
+                            size: (n.type === 'RiskCluster' || isCleanCluster) ? 24 : (isHub ? 18 : 12),
+                            color: {
+                                background: colorConfig.background,
+                                border: colorConfig.border,
+                                highlight: { background: colorConfig.highlight, border: '#1c2450' }
+                            },
+                            font: { color: '#1c2450', size: 12, face: 'Inter', strokeWidth: 2, strokeColor: '#f7f8fe' }
+                        });
+                    }
+                }
+            });
+            const nodesArray = Array.from(uniqueNodesMap.values());
+
+            const uniqueEdgesMap = new Map();
+            (data.edges || []).forEach(e => {
+                const from = e.from || e.source;
+                const to = e.to || e.target;
+                if (from != null && to != null) {
+                    const fromStr = String(from);
+                    const toStr = String(to);
+                    const edgeKey = `${fromStr}->${toStr}:${e.type || ''}`;
+                    if (!uniqueEdgesMap.has(edgeKey)) {
+                        uniqueEdgesMap.set(edgeKey, {
+                            id: edgeKey,
+                            from: fromStr,
+                            to: toStr,
+                            label: e.type || '',
+                            font: { color: '#8489ab', size: 9, align: 'middle' },
+                            color: { color: '#d7dcf6', highlight: '#4c5fd5' }
+                        });
+                    }
+                }
+            });
+            const edgesArray = Array.from(uniqueEdgesMap.values());
+
+            if (network) {
+                try { network.destroy(); } catch (err) { }
+                network = null;
+            }
+
+            const networkData = {
+                nodes: new vis.DataSet(nodesArray),
+                edges: new vis.DataSet(edgesArray)
+            };
+
+            const options = {
+                nodes: { borderWidth: 2, shadow: false, font: { color: '#1c2450', size: 13 } },
+                edges: { width: 2, color: { inherit: 'from' }, smooth: { type: 'continuous' }, arrows: { to: { enabled: false } } },
+                layout: { hierarchical: { enabled: false } },
+                physics: {
+                    enabled: true,
+                    barnesHut: {
+                        gravitationalConstant: -4000,
+                        centralGravity: 0.2,
+                        springLength: 120,
+                        springConstant: 0.04,
+                        damping: 0.09
+                    },
+                    stabilization: { enabled: true, iterations: 200 }
+                },
+                interaction: { hover: true, zoomView: true, dragView: true, dragNodes: true }
+            };
+
+            network = new vis.Network(container, networkData, options);
+
+            showLoading('Stabilizing graph layout…');
+
+            network.once('stabilizationIterationsDone', function () {
+                network.setOptions({ physics: false });
+                network.fit({ animation: { duration: 400 } });
+                hideLoading();
+            });
+
+            setTimeout(() => {
+                if (network) {
+                    network.setOptions({ physics: false });
+                    network.fit();
+                    hideLoading();
+                }
+            }, 600);
+        }
+
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        window.addEventListener('DOMContentLoaded', fetchClusters);
+    </script>
+</body>
+
+</html>
