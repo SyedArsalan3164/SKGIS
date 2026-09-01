@@ -60,12 +60,6 @@ Organized fraud syndicates exploit this limitation by deploying synthetic custom
 [![SKGIS Demo Walkthrough](docs/demo-thumbnail.png)](https://drive.google.com/file/d/1UvBuoq9ek4iTzHAqb0NHPkwxLbzk0cK0/view?usp=sharing)
 *Click thumbnail above to watch the 3-minute executive walkthrough video.*
 
-### 🌐 One-Click Live Interactive Demo
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/)
-
-> **Instant Browser Access**: Click the **"Open in GitHub Codespaces"** badge above to launch a complete, fully functional cloud instance of SKGIS directly inside your web browser without installing anything locally!
-
 ---
 
 ## 4. Quickstart — Running in One Command
