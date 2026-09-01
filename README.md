@@ -58,7 +58,7 @@ Organized fraud syndicates exploit this limitation by deploying synthetic custom
 ## 3. Visual Demo & Explorer
 
 [![SKGIS Demo Walkthrough](docs/demo-thumbnail.png)](https://drive.google.com/file/d/1UvBuoq9ek4iTzHAqb0NHPkwxLbzk0cK0/view?usp=sharing)
-*Click thumbnail above to watch the 3-minute executive walkthrough video.*
+*Click thumbnail above to watch the 5-minute executive walkthrough video.*
 
 ---
 
